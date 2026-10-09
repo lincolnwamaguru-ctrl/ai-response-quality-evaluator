@@ -1,8 +1,8 @@
 """
 AI Response Quality Evaluator
 
-A lightweight framework for evaluating AI-generated responses
-across common quality dimensions.
+A lightweight framework for evaluating and comparing AI-generated
+responses across common quality dimensions.
 
 Author: Lincoln Njogu
 """
@@ -12,6 +12,8 @@ from dataclasses import dataclass
 
 @dataclass
 class Evaluation:
+    """Stores quality scores and evaluator rationale for one AI response."""
+
     grounding: int
     relevance: int
     helpfulness: int
@@ -20,7 +22,7 @@ class Evaluation:
     rationale: str = ""
 
     def validate(self):
-        """Ensure every score is between 1 and 5."""
+        """Ensure every quality score is between 1 and 5."""
 
         scores = {
             "Grounding": self.grounding,
@@ -51,14 +53,14 @@ class Evaluation:
 
         return round(sum(scores) / len(scores), 2)
 
-    def report(self):
-        """Generate a readable evaluation report."""
+    def report(self, label="Response"):
+        """Generate a readable report for one response."""
 
         self.validate()
 
         return f"""
-AI RESPONSE QUALITY REPORT
---------------------------
+{label.upper()} QUALITY REPORT
+--------------------------------
 Grounding:             {self.grounding}/5
 Relevance:             {self.relevance}/5
 Helpfulness:           {self.helpfulness}/5
@@ -72,19 +74,60 @@ Rationale:
 """
 
 
+def compare_responses(response_a, response_b):
+    """
+    Compare two evaluated AI responses and return the preferred response.
+    """
+
+    score_a = response_a.overall_score()
+    score_b = response_b.overall_score()
+
+    print(response_a.report("Response A"))
+    print(response_b.report("Response B"))
+
+    print("SIDE-BY-SIDE RESULT")
+    print("-------------------")
+    print(f"Response A Overall Score: {score_a}/5")
+    print(f"Response B Overall Score: {score_b}/5")
+
+    if score_a > score_b:
+        winner = "Response A"
+    elif score_b > score_a:
+        winner = "Response B"
+    else:
+        winner = "Tie"
+
+    print(f"\nPreferred Response: {winner}")
+
+    return winner
+
+
 if __name__ == "__main__":
 
-    example = Evaluation(
+    response_a = Evaluation(
         grounding=5,
         relevance=5,
-        helpfulness=4,
+        helpfulness=5,
         naturalness=4,
         instruction_adherence=5,
         rationale=(
-            "The response directly addresses the user's request, "
-            "remains grounded in the available context, and avoids "
+            "Response A directly addresses the user's request, "
+            "uses the available context appropriately, and avoids "
             "unsupported assumptions."
         ),
     )
 
-    print(example.report())
+    response_b = Evaluation(
+        grounding=3,
+        relevance=4,
+        helpfulness=3,
+        naturalness=4,
+        instruction_adherence=3,
+        rationale=(
+            "Response B is generally relevant but introduces an "
+            "unsupported assumption and does not fully satisfy the "
+            "user's instruction."
+        ),
+    )
+
+    compare_responses(response_a, response_b)
